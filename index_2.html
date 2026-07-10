@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sivaranjani K — Computer Science Student</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800&family=Inter:wght@400;500;600&display=swap');
+
+:root{
+  --bg:#160610;
+  --bg-elevated:#230a1d;
+  --bg-card:#2b0c24;
+  --border:#4a1d3d;
+  --border-bright:#8a2e6d;
+  --text:#faeaf3;
+  --text-dim:#b98aa8;
+  --signal:#ff6fb0;    /* hot pink signal */
+  --alert:#d1447a;     /* amber alert accent */
+  --ai:#ffc2e2;         /* electric cyan for AI/ML */
+  --font-display:'JetBrains Mono',monospace;
+  --font-body:'Inter',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  background:radial-gradient(ellipse at 50% 0%, #3d0f30 0%, #160610 60%);
+  color:var(--text);
+  font-family:var(--font-body);
+  overflow-x:hidden;
+  perspective:1500px;
+}
+::selection{background:var(--signal);color:#000;}
+
+#bg-canvas{
+  position:fixed; inset:0; z-index:0; opacity:0.55; pointer-events:none;
+}
+
+/* scanline / grain overlay */
+body::before{
+  content:'';
+  position:fixed; inset:0;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,0.015) 0px,transparent 1px,transparent 2px);
+  pointer-events:none; z-index:999;
+}
+
+a{color:inherit;text-decoration:none;}
+
+#scroll-progress{position:fixed; top:0; left:0; height:3px; width:0%; z-index:200;
+  background:linear-gradient(90deg,var(--signal),var(--ai)); box-shadow:0 0 12px rgba(255,111,176,0.8);
+  transition:width .1s linear;}
+
+/* NAV */
+nav{
+  position:fixed; top:0; left:0; right:0; z-index:100;
+  display:flex; justify-content:space-between; align-items:center;
+  padding:20px 5vw;
+  background:rgba(22,6,16,0.75);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
+}
+.nav-logo{font-family:var(--font-display);font-weight:800;letter-spacing:1px;font-size:14px;color:var(--signal);}
+.nav-links{display:flex;gap:28px;list-style:none;}
+.nav-links a{
+  font-family:var(--font-display);font-size:11px;letter-spacing:1px;
+  color:var(--text-dim); transition:color .2s;
+}
+.nav-links a:hover{color:var(--signal);}
+@media(max-width:900px){.nav-links{display:none;}}
+
+/* HERO */
+.hero{
+  position:relative; min-height:100vh;
+  display:flex; align-items:center; justify-content:center;
+  padding:120px 5vw 60px;
+}
+#hero-canvas{
+  position:absolute; inset:0; z-index:0; opacity:0.85;
+}
+.hero-content{
+  position:relative; z-index:2; text-align:center; max-width:800px;
+}
+.hero-photo-frame{
+  width:150px; height:150px; margin:0 auto 26px; border-radius:50%;
+  padding:4px; background:conic-gradient(from 0deg, var(--signal), var(--ai), var(--alert), var(--signal));
+  animation:spin-frame 6s linear infinite;
+  box-shadow:0 0 50px rgba(255,111,176,0.35);
+}
+@keyframes spin-frame{to{transform:rotate(360deg);}}
+.hero-photo-inner{
+  width:100%; height:100%; border-radius:50%; background:var(--bg-elevated);
+  display:flex; align-items:center; justify-content:center; overflow:hidden;
+  border:2px solid var(--bg);
+}
+.hero-photo-inner img{width:100%; height:100%; object-fit:cover; display:block;}
+.photo-placeholder{
+  font-family:var(--font-display); font-size:10px; letter-spacing:1px;
+  color:var(--text-dim); text-align:center; line-height:1.8;
+}
+.photo-placeholder .cam-icon{font-size:26px; display:block; margin-bottom:4px;}
+.hero-eyebrow{
+  font-family:var(--font-display); font-size:12px; letter-spacing:3px;
+  color:var(--alert); margin-bottom:20px; display:block;
+}
+.hero h1{
+  font-family:var(--font-display); font-weight:800;
+  font-size:clamp(2.5rem,7vw,5rem);
+  line-height:1.05; letter-spacing:-1px;
+  color:var(--text);
+  text-shadow:0 0 40px rgba(255,111,176,0.35);
+}
+.hero h1 span{color:var(--signal);}
+.hero-sub{
+  font-family:var(--font-body); font-size:clamp(1rem,2vw,1.25rem);
+  color:var(--text-dim); margin:22px auto 30px; max-width:620px; line-height:1.6;
+}
+.hero-meta{
+  font-family:var(--font-display); font-size:12px; color:var(--text-dim);
+  margin-bottom:34px; letter-spacing:0.5px;
+}
+.hero-meta span{color:var(--signal);}
+.hero-actions{display:flex; gap:16px; justify-content:center; flex-wrap:wrap;}
+.btn{
+  font-family:var(--font-display); font-size:12px; letter-spacing:1px;
+  padding:14px 26px; border-radius:2px; border:1px solid var(--border-bright);
+  transition:all .25s; cursor:pointer; background:transparent;
+}
+.btn-primary{background:var(--signal); color:#000; border-color:var(--signal); font-weight:700;}
+.btn-primary:hover{box-shadow:0 0 30px rgba(255,111,176,0.55); transform:translateY(-2px);}
+.btn-ghost:hover{border-color:var(--signal); color:var(--signal); transform:translateY(-2px);}
+
+/* SECTIONS */
+section{padding:110px 5vw; position:relative;}
+.stage-label{
+  font-family:var(--font-display); font-size:12px; letter-spacing:2px;
+  color:var(--alert); margin-bottom:10px; display:block;
+}
+.section-title{
+  font-family:var(--font-display); font-weight:800; font-size:clamp(1.8rem,4vw,2.6rem);
+  margin-bottom:14px; letter-spacing:-0.5px;
+}
+.section-desc{color:var(--text-dim); max-width:560px; margin-bottom:60px; line-height:1.6;}
+
+/* SKILLS GRID */
+.skills-grid{
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:1px; background:var(--border); border:1px solid var(--border);
+}
+.skill-cat{background:var(--bg-elevated); padding:28px;}
+.skill-cat h4{
+  font-family:var(--font-display); font-size:11px; letter-spacing:2px;
+  color:var(--ai); margin-bottom:16px; text-transform:uppercase;
+}
+.skill-tags{display:flex; flex-wrap:wrap; gap:8px;}
+.skill-tags span{
+  font-size:13px; padding:6px 12px; border:1px solid var(--border-bright);
+  border-radius:2px; color:var(--text-dim); font-family:var(--font-display);
+  transition:all .2s;
+}
+.skill-tags span:hover{border-color:var(--signal); color:var(--signal); background:rgba(255,111,176,0.12);}
+
+/* PROJECTS — 3D tilt cards */
+.projects-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:24px;}
+.case-card{
+  background:linear-gradient(145deg,var(--bg-card),#080428);
+  border:1px solid var(--border);
+  padding:32px; position:relative; overflow:hidden;
+  transform-style:preserve-3d; transition:transform .15s ease-out, border-color .3s, box-shadow .3s;
+  cursor:pointer;
+  box-shadow:0 8px 0 -4px rgba(0,0,0,0.4), 0 20px 40px -20px rgba(0,0,0,0.7);
+}
+.case-card:hover{
+  border-color:var(--signal);
+  box-shadow:0 20px 0 -10px rgba(0,0,0,0.35), 0 40px 70px -25px rgba(255,111,176,0.35);
+}
+.case-card h3, .case-card p, .case-tags{transform:translateZ(24px);}
+.case-id{transform:translateZ(30px);}
+.case-card::before{
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg,var(--signal),var(--ai));
+  transform:scaleX(0); transform-origin:left; transition:transform .3s;
+}
+.case-card:hover::before{transform:scaleX(1);}
+.case-id{
+  font-family:var(--font-display); font-size:11px; color:var(--alert);
+  letter-spacing:2px; margin-bottom:14px; display:block;
+}
+.case-card h3{font-family:var(--font-display); font-size:1.25rem; margin-bottom:12px;}
+.case-card p{color:var(--text-dim); font-size:14px; line-height:1.65; margin-bottom:20px;}
+.case-tags{display:flex; flex-wrap:wrap; gap:8px;}
+.case-tags span{
+  font-size:11px; padding:5px 10px; background:rgba(0,229,255,0.1);
+  color:var(--signal); border-radius:2px; font-family:var(--font-display); letter-spacing:0.5px;
+}
+.case-link{
+  display:inline-flex; align-items:center; gap:6px; margin-top:20px;
+  font-family:var(--font-display); font-size:12px; letter-spacing:0.5px;
+  color:var(--signal); border-bottom:1px solid var(--border-bright);
+  padding-bottom:3px; transition:all .25s; transform:translateZ(28px);
+}
+.case-link:hover{color:var(--ai); border-color:var(--ai); gap:10px;}
+.case-link.disabled{color:var(--text-dim); border-color:var(--border); cursor:default; pointer-events:none;}
+
+/* generic 3D tilt-ready surfaces */
+.skill-cat, .cert-item, .timeline-item, .edu-card{transform-style:preserve-3d; transition:transform .15s ease-out, box-shadow .3s;}
+.skill-cat:hover, .cert-item:hover{box-shadow:0 20px 40px -20px rgba(255,111,176,0.25);}
+
+/* TIMELINE (achievements) */
+.timeline{border-left:1px solid var(--border-bright); padding-left:40px; display:flex; flex-direction:column; gap:44px;}
+.timeline-item{position:relative;}
+.timeline-item::before{
+  content:''; position:absolute; left:-45px; top:4px;
+  width:10px; height:10px; border-radius:50%;
+  background:var(--bg); border:2px solid var(--signal);
+  box-shadow:0 0 12px rgba(255,111,176,0.7);
+}
+.timeline-year{font-family:var(--font-display); color:var(--alert); font-size:12px; letter-spacing:2px;}
+.timeline-item h4{font-family:var(--font-display); font-size:1.05rem; margin:8px 0 8px;}
+.timeline-item p{color:var(--text-dim); font-size:14px; line-height:1.6; max-width:560px;}
+
+/* CERTS */
+.certs-list{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:1px; background:var(--border); border:1px solid var(--border);}
+.cert-item{background:var(--bg-elevated); padding:24px; display:flex; flex-direction:column; gap:4px;}
+.cert-item strong{font-family:var(--font-display); font-size:14px;}
+.cert-item span{color:var(--text-dim); font-size:12px;}
+
+/* EDUCATION */
+.edu-card{
+  border:1px solid var(--border); background:var(--bg-card); padding:36px;
+  display:grid; grid-template-columns:1fr auto; gap:20px; align-items:start;
+}
+.edu-card h3{font-family:var(--font-display); font-size:1.1rem; margin-bottom:8px;}
+.edu-card p.degree{color:var(--text-dim); margin-bottom:20px;}
+.edu-stats{display:flex; gap:36px; flex-wrap:wrap;}
+.edu-stat span{display:block; font-size:11px; color:var(--text-dim); letter-spacing:1px; margin-bottom:4px;}
+.edu-stat strong{font-family:var(--font-display); color:var(--signal); font-size:15px;}
+
+/* CONTACT */
+.contact-wrap{text-align:center; max-width:600px; margin:0 auto;}
+.contact-wrap .section-title{margin:0 auto 16px;}
+.contact-links{display:flex; gap:20px; justify-content:center; margin-top:34px; flex-wrap:wrap;}
+
+footer{
+  text-align:center; padding:36px 5vw; border-top:1px solid var(--border);
+  font-family:var(--font-display); font-size:11px; color:var(--text-dim); letter-spacing:1px;
+}
+
+.reveal{opacity:0; transform:translateY(24px); transition:opacity .7s ease, transform .7s ease;}
+.reveal.visible{opacity:1; transform:translateY(0);}
+
+@media(prefers-reduced-motion:reduce){
+  *{animation:none !important; transition:none !important;}
+}
+</style>
+</head>
+<body>
+
+<div id="scroll-progress"></div>
+
+<nav>
+  <div class="nav-logo">SIVARANJANI_K // v2.0</div>
+  <ul class="nav-links">
+    <li><a href="#hero">01.RECON</a></li>
+    <li><a href="#skills">02.WEAPONIZE</a></li>
+    <li><a href="#projects">03.DELIVER</a></li>
+    <li><a href="#achievements">04.EXPLOIT</a></li>
+    <li><a href="#certs">05.INSTALL</a></li>
+    <li><a href="#education">06.C2</a></li>
+    <li><a href="#contact">07.ACTIONS</a></li>
+  </ul>
+</nav>
+
+<section class="hero" id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-content">
+    <div class="hero-photo-frame reveal" data-tilt-photo>
+      <div class="hero-photo-inner">
+        <!-- Replace this span with: <img src="your-photo.jpg" alt="Sivaranjani K"> -->
+        <span class="photo-placeholder"><span class="cam-icon">📷</span>ADD<br>PHOTO</span>
+      </div>
+    </div>
+    <span class="hero-eyebrow">// COMPUTER SCIENCE STUDENT &nbsp;·&nbsp; SIH 2025 FINALIST</span>
+    <h1>SIVARANJANI K.<br><span>COMPUTER SCIENCE STUDENT</span></h1>
+    <p class="hero-sub">Enthusiastic and dedicated Computer Science student with a strong foundation in
+    programming, web development, and software engineering principles — hands-on with academic and
+    hackathon-based projects, passionate about using technology to solve real-world problems.</p>
+    <div class="hero-meta">📍 Puducherry, India &nbsp;|&nbsp; <span>sivaranjani.a.karikalan@gmail.com</span> &nbsp;|&nbsp; +91 97905 11446</div>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="mailto:sivaranjani.a.karikalan@gmail.com">EMAIL ME</a>
+      <a class="btn btn-ghost" href="https://www.linkedin.com/in/sivaranjani-karikalan-7275b02a3" target="_blank">LINKEDIN</a>
+      <a class="btn btn-ghost" href="https://github.com/sivaranjani0712" target="_blank">GITHUB</a>
+    </div>
+  </div>
+</section>
+
+<section id="skills">
+  <span class="stage-label reveal">STAGE 02 — WEAPONIZE</span>
+  <h2 class="section-title reveal">Toolset</h2>
+  <p class="section-desc reveal">The languages, frameworks, and tools used to design, build, and ship full-stack systems.</p>
+  <div class="skills-grid reveal">
+    <div class="skill-cat" data-tilt><h4>Programming Languages</h4><div class="skill-tags"><span>Java</span><span>Python</span><span>C</span><span>JavaScript</span></div></div>
+    <div class="skill-cat" data-tilt><h4>Web Technologies</h4><div class="skill-tags"><span>HTML5</span><span>CSS3</span><span>JavaScript</span></div></div>
+    <div class="skill-cat" data-tilt><h4>Database</h4><div class="skill-tags"><span>MySQL</span><span>NoSQL</span><span>SQL</span></div></div>
+    <div class="skill-cat" data-tilt><h4>Core CS Subjects</h4><div class="skill-tags"><span>DBMS</span><span>Computer Networks</span><span>Operating Systems</span><span>Data Structures & Algorithms</span><span>OOP</span></div></div>
+    <div class="skill-cat" data-tilt><h4>Tools</h4><div class="skill-tags"><span>Git</span><span>GitHub</span><span>VS Code</span><span>Eclipse</span><span>MySQL Workbench</span></div></div>
+    <div class="skill-cat" data-tilt><h4>Soft Skills</h4><div class="skill-tags"><span>Problem Solving</span><span>Teamwork</span><span>Leadership</span><span>Communication</span><span>Time Management</span></div></div>
+  </div>
+</section>
+
+<section id="projects">
+  <span class="stage-label reveal">STAGE 03 — DELIVER</span>
+  <h2 class="section-title reveal">Projects</h2>
+  <p class="section-desc reveal">Case files from the field.</p>
+  <div class="projects-grid">
+    <div class="case-card reveal" data-tilt>
+      <span class="case-id">CASE/01</span>
+      <h3>AgentVerse</h3>
+      <p>An AI-powered platform built during a 24-hour hackathon based on an on-the-spot challenge, focused on intelligent task automation and user experience — rapidly prototyped and presented with a team.</p>
+      <div class="case-tags"><span>AI/Automation</span><span>UX</span><span>Full Stack</span></div>
+      <a class="case-link" href="https://sivaranjani0712.github.io/agent-verse/" target="_blank">VIEW PROJECT →</a>
+    </div>
+    <div class="case-card reveal" data-tilt>
+      <span class="case-id">CASE/02</span>
+      <h3>Stagewise Sentinel</h3>
+      <p>An AI-powered cybersecurity platform for behavioral threat analysis — mapping attacker behavior across the cyber kill chain, generating Sigma detection rules, and producing forensic reports.</p>
+      <div class="case-tags"><span>AI/ML</span><span>Threat Analysis</span><span>Sigma Rules</span><span>Forensic Reporting</span></div>
+      <a class="case-link" href="https://github.com/sivaranjani0712/stagewise-sentinel" target="_blank">VIEW REPO →</a>
+    </div>
+    <div class="case-card reveal" data-tilt>
+      <span class="case-id">CASE/03</span>
+      <h3>E-Commerce Backend</h3>
+      <p>A microservices-based backend built with Spring Boot, featuring an API Gateway, dedicated authentication service, and REST APIs across independently deployable services.</p>
+      <div class="case-tags"><span>Spring Boot</span><span>Microservices</span><span>API Gateway</span><span>Auth</span></div>
+      <span class="case-link disabled">PRIVATE REPO</span>
+    </div>
+    <div class="case-card reveal" data-tilt>
+      <span class="case-id">CASE/04</span>
+      <h3>APK Modifier</h3>
+      <p>A project that adds a web-based security layer to an APK, providing additional protection and hardening features for Android applications.</p>
+      <div class="case-tags"><span>Android Security</span><span>Web-based Tooling</span></div>
+      <a class="case-link" href="https://sivaranjani0712.github.io/apk--modifier/" target="_blank">VIEW PROJECT →</a>
+    </div>
+  </div>
+</section>
+
+<section id="achievements">
+  <span class="stage-label reveal">STAGE 04 — EXPLOIT</span>
+  <h2 class="section-title reveal">Achievements</h2>
+  <p class="section-desc reveal">Turning hackathon opportunities into shipped results.</p>
+  <div class="timeline">
+    <div class="timeline-item reveal" data-tilt>
+      <span class="timeline-year">2025</span>
+      <h4>Finalist — Smart India Hackathon (SIH) 2025</h4>
+      <p>Selected as a finalist for developing an innovative technology solution at the national-level hackathon.</p>
+    </div>
+    <div class="timeline-item reveal" data-tilt>
+  <span class="timeline-year">2025</span>
+  <h4>Winner — National Hackathon 2025</h4>
+  <p>Organized by Achariya College of Engineering, for developing an impactful technology solution.</p>
+</div>
+    <div class="timeline-item reveal" data-tilt>
+      <span class="timeline-year">HACKATHON</span>
+      <h4>Built AgentVerse in 24 Hours</h4>
+      <p>Developed AgentVerse, an AI-powered platform, during a 24-hour hackathon based on an on-the-spot challenge.</p>
+    </div>
+    <div class="timeline-item reveal" data-tilt>
+      <span class="timeline-year">ACADEMICS</span>
+      <h4>8.89 CGPA through 5th Semester</h4>
+      <p>Maintained a strong academic record while actively participating in national-level hackathons and technical innovation challenges.</p>
+    </div>
+    <div class="timeline-item reveal" data-tilt>
+      <span class="timeline-year">PROJECTS</span>
+      <h4>Multiple Academic &amp; Web Dev Builds</h4>
+      <p>Developed several academic and web development projects using Java, C++, and MySQL.</p>
+    </div>
+  </div>
+</section>
+
+<section id="certs">
+  <span class="stage-label reveal">STAGE 05 — INSTALL</span>
+  <h2 class="section-title reveal">Certifications</h2>
+  <div class="certs-list reveal">
+    <div class="cert-item" data-tilt><strong>Java Programming</strong><span>Infosys Springboard</span></div>
+    <div class="cert-item" data-tilt><strong>Introduction to Artificial Intelligence</strong><span>Great Learning</span></div>
+    <div class="cert-item" data-tilt><strong>Finalist, Smart India Hackathon 2025</strong><span>SIH</span></div>
+    <div class="cert-item" data-tilt><strong>Participant, 24-Hour AI Hackathon</strong><span>Developed AgentVerse</span></div>
+  </div>
+</section>
+
+<section id="education">
+  <span class="stage-label reveal">STAGE 06 — C2</span>
+  <h2 class="section-title reveal">Education</h2>
+  <div class="edu-card reveal" data-tilt>
+    <div>
+      <h3>Sri Venkateshwaraa College of Engineering and Technology</h3>
+      <p class="degree">Bachelor of Technology (B.Tech), Computer Science and Engineering</p>
+      <div class="edu-stats">
+        <div class="edu-stat"><span>LOCATION</span><strong>Puducherry, India</strong></div>
+        <div class="edu-stat"><span>DURATION</span><strong>2023 – 2027</strong></div>
+        <div class="edu-stat"><span>GPA</span><strong>8.89 / 10 (till 5th sem)</strong></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="contact">
+  <div class="contact-wrap">
+    <span class="stage-label reveal">STAGE 07 — ACTIONS ON OBJECTIVES</span>
+    <h2 class="section-title reveal">Let's build something together.</h2>
+    <p class="section-desc reveal" style="margin:0 auto;">Open to opportunities in software development — reach out directly or find me on GitHub and LinkedIn.</p>
+    <div class="contact-links reveal">
+      <a class="btn btn-primary" href="mailto:sivaranjani.a.karikalan@gmail.com">sivaranjani.a.karikalan@gmail.com</a>
+      <a class="btn btn-ghost" href="https://www.linkedin.com/in/sivaranjani-karikalan-7275b02a3" target="_blank">LinkedIn</a>
+      <a class="btn btn-ghost" href="https://github.com/sivaranjani0712" target="_blank">GitHub</a>
+    </div>
+  </div>
+</section>
+
+<footer>© 2026 SIVARANJANI K. — PUDUCHERRY, INDIA</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ---- 3D hero: rotating threat-network sphere ----
+(function(){
+  const canvas = document.getElementById('hero-canvas');
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth/window.innerHeight, 0.1, 1000);
+  camera.position.z = 5.5;
+  const renderer = new THREE.WebGLRenderer({canvas, alpha:true, antialias:true});
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+
+  const group = new THREE.Group();
+  scene.add(group);
+
+  // wireframe icosahedron (the "network")
+  const geo = new THREE.IcosahedronGeometry(2.2, 1);
+  const mat = new THREE.MeshBasicMaterial({color:0xff6fb0, wireframe:true, transparent:true, opacity:0.35});
+  const mesh = new THREE.Mesh(geo, mat);
+  group.add(mesh);
+
+  // pulsing node points at vertices
+  const positions = geo.attributes.position;
+  const nodeGeo = new THREE.BufferGeometry();
+  nodeGeo.setAttribute('position', positions.clone());
+  const nodeMat = new THREE.PointsMaterial({color:0xffc2e2, size:0.06, transparent:true});
+  const nodes = new THREE.Points(nodeGeo, nodeMat);
+  group.add(nodes);
+
+  // outer faint shell
+  const geo2 = new THREE.IcosahedronGeometry(3.1, 0);
+  const mat2 = new THREE.MeshBasicMaterial({color:0xd1447a, wireframe:true, transparent:true, opacity:0.08});
+  const mesh2 = new THREE.Mesh(geo2, mat2);
+  group.add(mesh2);
+
+  let mouseX=0, mouseY=0;
+  window.addEventListener('mousemove', e=>{
+    mouseX = (e.clientX/window.innerWidth - 0.5);
+    mouseY = (e.clientY/window.innerHeight - 0.5);
+  });
+
+  function animate(){
+    requestAnimationFrame(animate);
+    group.rotation.y += 0.0022;
+    group.rotation.x += 0.0006;
+    mesh2.rotation.y -= 0.0012;
+    group.rotation.y += (mouseX*0.3 - group.rotation.y)*0.02;
+    group.rotation.x += (mouseY*0.3 - group.rotation.x)*0.02;
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', ()=>{
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+})();
+
+// ---- scroll reveal ----
+const revealEls = document.querySelectorAll('.reveal');
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('visible'); io.unobserve(e.target); }});
+},{threshold:0.15});
+revealEls.forEach(el=>io.observe(el));
+
+// ---- scroll progress bar ----
+const progressBar = document.getElementById('scroll-progress');
+window.addEventListener('scroll', ()=>{
+  const scrolled = window.scrollY;
+  const max = document.body.scrollHeight - window.innerHeight;
+  progressBar.style.width = (max>0 ? (scrolled/max)*100 : 0) + '%';
+});
+
+// ---- 3D tilt on project cards, skill tiles, certs, timeline items, edu card ----
+document.querySelectorAll('[data-tilt]').forEach(card=>{
+  card.addEventListener('mousemove', e=>{
+    const r = card.getBoundingClientRect();
+    const x = (e.clientX - r.left)/r.width - 0.5;
+    const y = (e.clientY - r.top)/r.height - 0.5;
+    card.style.transform = `perspective(700px) rotateY(${x*18}deg) rotateX(${-y*18}deg) translateZ(20px) translateY(-6px)`;
+  });
+  card.addEventListener('mouseleave', ()=>{ card.style.transform = 'perspective(700px) rotateY(0) rotateX(0) translateZ(0)'; });
+});
+
+// ---- tilt on the hero photo frame ----
+document.querySelectorAll('[data-tilt-photo]').forEach(el=>{
+  el.addEventListener('mousemove', e=>{
+    const r = el.getBoundingClientRect();
+    const x = (e.clientX - r.left)/r.width - 0.5;
+    const y = (e.clientY - r.top)/r.height - 0.5;
+    el.style.transform = `perspective(500px) rotateY(${x*20}deg) rotateX(${-y*20}deg)`;
+  });
+  el.addEventListener('mouseleave', ()=>{ el.style.transform = 'perspective(500px) rotateY(0) rotateX(0)'; });
+});
+</script>
+</body>
+</html>
